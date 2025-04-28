@@ -1,0 +1,33 @@
+.wrapper {
+    position: fixed;
+    bottom: 30px;
+    width:65%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #D9DADB;
+    /* padding: 10px 20px; */
+    border-radius: 16px;
+    height:3.5rem;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    /* gap: 1rem; */
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+.item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  height: 2.5rem;
+  width: 2.5rem;
+
+
+
+}
+.active{
+  background-color: #2D2F2F;
+}
+  

@@ -1,0 +1,21 @@
+.expensesPage {
+  width: 100%;
+  max-width: 400px; /* Mobile width */
+  margin: 0 auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.expensesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 100vh;
+  overflow-y: auto; /* Scrollable list */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.expensesList::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

@@ -1,0 +1,135 @@
+import Expense from "./expenseModel";
+import mongoose from "mongoose";
+import { getExpensesForCurrentUser } from "@/backend/utils/splitwise";
+const splitwise_user_id = process.env.SPLITWISE_USER_ID
+export async function getExpensesGroupedByMonth() {
+    const expenses = await Expense.find().lean(); // Fetch all expenses as plain objects
+    const grouped = {};
+  
+    expenses.forEach((expense) => {
+      const dateObj = new Date(expense.date);
+      const monthName = dateObj.toLocaleString("default", { month: "long" });
+      const year = dateObj.getFullYear();
+      const key = `${year}-${monthName}`; // e.g., "2024-August"
+  
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+  
+      grouped[key].push(expense);
+    });
+  
+    return grouped;
+  }
+
+  export async function addExpense(description, amount) {
+    // const { description, amount, date } = expense;
+  
+    if (!description || !amount || !date) {
+      throw new Error("All fields (description, amount, date) are required.");
+    }
+  
+    const newExpense = new Expense({
+      _id: new mongoose.Types.ObjectId(),
+      description,
+      amount,
+      date: new Date(),
+    });
+  
+    return await newExpense.save();
+  }
+
+  export async function importFromSplitwise(){
+      if(!splitwise_user_id){
+        return { success: false, error: "No current user"};
+      }else{
+        const response = await getExpensesForCurrentUser();
+
+        if (response.success) {
+          const expenses = response.data;
+          console.log("got Expenses", expenses.length);
+        
+          const splitwiseIds = expenses.map(exp => exp.id.toString());
+        
+          // Fetch all existing expenses by splitwise_id
+          const existingExpenses = await Expense.find(
+            { splitwise_id: { $in: splitwiseIds } },
+            'splitwise_id'
+          );
+        
+          const existingIdsSet = new Set(existingExpenses.map(e => e.splitwise_id));
+        
+          const expensesToInsert = [];
+          const expensesToUpdate = [];
+        
+          for (const expense of expenses) {
+            const currentUser = expense.users.find(u => u.user_id.toString() === splitwise_user_id);
+            if (!currentUser || currentUser.owed_share === "0.0") continue;
+        
+            const expenseObj = {
+              description: expense.description || '',
+              amount: currentUser.owed_share,
+              type: 'normal',
+              from_splitwise: true,
+              splitwise_id: expense.id.toString(),
+              date: expense.date,
+              
+            };
+            console.log(expense)
+        
+            if (expense.updated_by === null) {
+              // New expense, only add if not already in DB
+              if (!existingIdsSet.has(expense.id.toString())) {
+                expensesToInsert.push({ _id: new mongoose.Types.ObjectId(), ...expenseObj });
+              }
+            } else {
+              // Updated expense, push to update list
+              expensesToUpdate.push(expenseObj);
+            }
+          }
+        
+          try {
+            // Insert new expenses
+            if (expensesToInsert.length > 0) {
+              console.log("Inserting")
+              await Expense.insertMany(expensesToInsert);
+            }
+        
+            // Update existing expenses
+            console.log("UPDATE ARRAY HERE : ", expensesToUpdate)
+            for (const expense of expensesToUpdate) {
+              await Expense.updateOne(
+                { splitwise_id: expense.splitwise_id },
+                { $set: { amount: expense.amount, description: expense.description } }, // you can set more fields if needed
+                { upsert: true } // <--- this will insert a new document if no match is found
+              );
+            }
+        
+            return { success: true };
+          } catch (error) {
+            console.error('Error syncing expenses:', error);
+            return { success: false, error: error.message };
+          }
+        } else {
+          console.error("Error while getting from splitwise", response.error);
+          return {
+            success: false,
+            error: response.error
+          };
+        }
+      }
+  }
+
+  export async function GetLastupdatedTimestamp() {
+    try {
+      const latestExpense = await Expense.findOne()
+        .sort({ created_ts: -1 }) // Sort by newest first
+        .select('created_ts')     // Only return the created_at field
+                         // Return plain JS object (optional)
+  
+      return latestExpense["created_ts"] || null;
+    } catch (err) {
+      console.error('Error fetching latest timestamp:', err);
+      return null;
+    }
+  }
