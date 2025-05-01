@@ -7,7 +7,7 @@
     background: #D9DADB;
     /* padding: 10px 20px; */
     border-radius: 16px;
-    height:3.5rem;
+    height:5rem;
     align-items: center;
     justify-content: center;
     display: flex;
@@ -21,8 +21,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 3.5rem;
+  width: 3.5rem;
 
 
 

@@ -6,11 +6,18 @@
   box-sizing: border-box;
 }
 
+.wrapper{
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 3.5rem);
+}
+
 .expensesList {
   display: flex;
   flex-direction: column;
   gap: 10px;
   max-height: 100vh;
+  /* z-index: -1000; */
   overflow-y: auto; /* Scrollable list */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
@@ -19,3 +26,27 @@
 .expensesList::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
+.fab {
+  position: fixed;
+  bottom: 15%;
+  right: 1.2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-family: var(--sb);
+  background-color: #2D2F2F;
+  color: white;
+  font-size: 32px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); */
+  transition: background-color 0.2s ease-in-out;
+}
+
+.fab:hover {
+  background-color: #333;
+}
+

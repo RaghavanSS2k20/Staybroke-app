@@ -1,34 +1,66 @@
+"use client"
+import React from "react"
 import styles from "./expense.module.css"
 import { useNavBar } from "@/contexts/NavBarContext"
 import { useEffect } from "react"
+import { AddSVGComponent } from "@/assets/SVGComponents";
+import { Sheet } from "@/components/drawer/drawerComponent"
+// import { BottomSheet } from "@/components/sheet/BottomSheetComponent";
+import { useState } from "react";
+import Expense from "@/assets/bottombar/expenses.svg"
+
 export default function ExpenseComponent(){
     const { setHeading } = useNavBar();
+    const [open, setOpen] = useState(false)
+    const onOpen = () =>{
+      setOpen(!open)
+    }
+
     useEffect(() => {
-        setHeading("Expenses");
-      }, [setHeading]); // Only run once when the page loads
+      setHeading("Expenses");
+    }, [setHeading]); // Only run once when the page loads
+
+
+    
 
     return(
-        <div className={styles.expenseCard}>
-        <div className={styles.date}>
-          <div>25</div>
-          <div>Mar</div>
-        </div>
-      
-        <div className={styles.details}>
-          <div className={styles.titleRow}>
-            <div className={styles.title}>Meghna Dum Briyani</div>
-            <div className={styles.icon}>
-              {/* optional icon */}
+      <>
+       
+            <div className={styles.expenseCard}>
+              <div className={styles.date}>
+                <div>25</div>
+                <div>Mar</div>
+              </div>
+            
+              <div className={styles.details}>
+                <div className={styles.titleRow}>
+                  <div className={styles.title}>Meghna Dum Briyani</div>
+                  <div className={styles.icon}>
+                    {/* optional icon */}
+                    
+                  </div>
+                </div>
+                <div className={styles.subtitle}>From Splitwise</div>
+              </div>
+            
+              <div className={styles.amount}>
+                ₹25.00
+              </div>
+
               
+
+
+
+
             </div>
-          </div>
-          <div className={styles.subtitle}>From Splitwise</div>
-        </div>
-      
-        <div className={styles.amount}>
-          ₹25.00
-        </div>
-      </div>
+            
+       
+            
+            
+            
+
+        
+      </>
       
     )
 }

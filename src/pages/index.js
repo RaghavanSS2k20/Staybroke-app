@@ -1,6 +1,22 @@
 import ExpenseComponent from "@/components/index/expense/ExpenseComponent";
 import styles from "../styles/Home.module.css"
+import { useState, useEffect, useRef } from "react";
+import { Sheet } from "@/components/drawer/drawerComponent";
+import { AddSVGComponent } from "@/assets/SVGComponents";
+// import { Sheet } from "@/components/drawer/drawerComponent";
 export default function ExpenseList(){
+
+  const [open, setOpen] = useState(false)
+  const bottomRef = useRef(null);
+
+  const onOpen = () => {
+    setOpen(true);
+
+  
+  };
+
+
+  
   const expenses = [
     {
       "date": "2025-04-26T10:23:00.000Z",
@@ -146,6 +162,7 @@ export default function ExpenseList(){
   
   
   return(
+    <>
     <div className={styles.expensesPage}>
       <div className={styles.expensesList}>
         {expenses.map((expense) => (
@@ -153,5 +170,17 @@ export default function ExpenseList(){
         ))}
       </div>
     </div>
+
+   
+    
+    <Sheet open={open} setOpen={setOpen}/>
+
+    <div className={styles.fab}  onClick={onOpen}>
+       <AddSVGComponent size={15}/>
+    </div>
+   
+    </>
+
+    
   )
 }

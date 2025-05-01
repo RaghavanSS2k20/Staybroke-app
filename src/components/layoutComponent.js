@@ -5,6 +5,7 @@ import pullToRefresh from '../utils/usePullToRefresh';
 import styles from "./layout.module.css"
 import { BottomTabBar } from './BottomTab/BottomTabBar';
 import NavbarComponent from './navbar/navbarComponent';
+import { AddSVGComponent } from '@/assets/SVGComponents';
 export default function Layout({children}) {
   async function handleRefresh() {
     // await onRefresh();
@@ -22,6 +23,7 @@ export default function Layout({children}) {
           <main>
             {children}
           </main>
+          
           <BottomTabBar/>
         </div>
       );
