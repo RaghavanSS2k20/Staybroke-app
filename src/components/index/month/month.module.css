@@ -1,0 +1,36 @@
+.wrapper{
+    display: flex;
+    flex-direction: column;
+}
+
+.month-heading{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+
+
+}
+
+.month-name{
+    color: #595A5B;
+    font-weight: 700;
+    font-size: 1rem;
+
+}
+
+.month-credit{
+    color: #595A5B;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: end;
+}
+
+.expenses{
+    display: flex;
+    flex-direction: column;
+    
+}
+
+
+

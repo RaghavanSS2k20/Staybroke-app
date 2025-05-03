@@ -13,10 +13,9 @@ const expenseSchema = mongoose.Schema({
         required: true,
         type: Date
     },
-    type: {
-        required: true,
-        type: String,
-        enum: ['good', 'normal', 'bad']
+    guilty:{
+        type:Boolean,
+        default:false
     },
     from_splitwise:{
         type : Boolean,

@@ -3,29 +3,40 @@ import mongoose from "mongoose";
 import { getExpensesForCurrentUser } from "@/backend/utils/splitwise";
 const splitwise_user_id = process.env.SPLITWISE_USER_ID
 export async function getExpensesGroupedByMonth() {
-    const expenses = await Expense.find().lean(); // Fetch all expenses as plain objects
-    const grouped = {};
-  
-    expenses.forEach((expense) => {
-      const dateObj = new Date(expense.date);
-      const monthName = dateObj.toLocaleString("default", { month: "long" });
-      const year = dateObj.getFullYear();
-      const key = `${year}-${monthName}`; // e.g., "2024-August"
-  
-      if (!grouped[key]) {
-        grouped[key] = [];
-      }
-  
-      grouped[key].push(expense);
-    });
-  
-    return grouped;
-  }
+  const expenses = await Expense.find().lean(); // Fetch all expenses as plain objects
+  const grouped = [];
+
+  expenses.forEach((expense) => {
+    const dateObj = new Date(expense.date);
+    const monthName = dateObj.toLocaleString("default", { month: "long" });
+    const year = dateObj.getFullYear();
+    const key = `${year}-${monthName}`; // e.g., "2024-August"
+
+    // Find existing group for the month and year
+    let group = grouped.find((g) => g.month === key);
+
+    if (!group) {
+      group = { month: key, expenses: [] };
+      grouped.push(group);
+    }
+
+    group.expenses.push(expense);
+  });
+
+  // 🔽 Sort expenses inside each group by descending date
+  grouped.forEach(group => {
+    group.expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  });
+
+  return grouped;
+}
+
+
 
   export async function addExpense(description, amount) {
     // const { description, amount, date } = expense;
   
-    if (!description || !amount || !date) {
+    if (!description || !amount ) {
       throw new Error("All fields (description, amount, date) are required.");
     }
   
@@ -132,4 +143,21 @@ export async function getExpensesGroupedByMonth() {
       console.error('Error fetching latest timestamp:', err);
       return null;
     }
+  }
+
+  export async function updateGuilt(expenseId) {
+    if (!mongoose.Types.ObjectId.isValid(expenseId)) {
+      throw new Error('Invalid expense ID');
+    }
+  
+    const expense = await Expense.findById(expenseId);
+  
+    if (!expense) {
+      throw new Error('Expense not found');
+    }
+  
+    expense.guilty = !expense.guilty;
+    await expense.save();
+  
+    return expense;
   }
