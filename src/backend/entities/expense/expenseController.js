@@ -2,7 +2,7 @@ import Expense from "./expenseModel";
 import mongoose from "mongoose";
 import { getExpensesForCurrentUser } from "@/backend/utils/splitwise";
 const splitwise_user_id = process.env.SPLITWISE_USER_ID
-export async function getExpensesGroupedByMonth() {
+export async function getExpensesGroupedByMonthOpt() {
   const expenses = await Expense.find().lean(); // Fetch all expenses as plain objects
   const grouped = [];
 
@@ -30,12 +30,62 @@ export async function getExpensesGroupedByMonth() {
 
   return grouped;
 }
+export async function getExpensesGroupedByMonth() {
+  const result = await Expense.aggregate([
+    // 1. Sort all expenses by date descending
+    { $sort: { date: -1 } },
+
+    // 2. Add year and month name
+    {
+      $addFields: {
+        year: { $year: "$date" },
+        monthName: { $dateToString: { format: "%B", date: "$date" } },
+      }
+    },
+
+    // 3. Group by year and month
+    {
+      $group: {
+        _id: { year: "$year", month: "$monthName" },
+        expenses: { $push: "$$ROOT" },
+        latestDate: { $first: "$date" } // to sort groups
+      }
+    },
+
+    // 4. Sort the groups by latest expense date
+    { $sort: { latestDate: -1 } },
+
+    // 5. Sort expenses array inside each group (MongoDB 5.2+)
+    {
+      $project: {
+        _id: 0,
+        month: {
+          $concat: [
+            { $toString: "$_id.year" },
+            "-",
+            "$_id.month"
+          ]
+        },
+        expenses: {
+          $sortArray: {
+            input: "$expenses",
+            sortBy: { date: -1 }
+          }
+        }
+      }
+    }
+  ]);
+
+  return result;
+}
 
 
 
-  export async function addExpense(description, amount) {
+
+
+  export async function addExpense({description, amount}) {
     // const { description, amount, date } = expense;
-  
+    console.log(description,amount)
     if (!description || !amount ) {
       throw new Error("All fields (description, amount, date) are required.");
     }
@@ -155,8 +205,9 @@ export async function getExpensesGroupedByMonth() {
     if (!expense) {
       throw new Error('Expense not found');
     }
-  
+    
     expense.guilty = !expense.guilty;
+    console.log(expense)
     await expense.save();
   
     return expense;

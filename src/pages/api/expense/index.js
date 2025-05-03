@@ -3,15 +3,15 @@ import { NextResponse } from "next/server";
 export default async function handler(req,res){
     if(req.method == 'POST'){
         try{
-            const data = req.body
+            const data = req.body.expense
             console.log("Data recived : ",data)
-            const response = await addExpense(data.description, data.amount)
+            const response = await addExpense({description:data.description, amount:data.amount})
             // return NextResponse.json(response, { status: 200 });
-            return res.status(200).json({response})
+            return res.status(200).json({data:response})
             
         }catch(e){
-            console.error('Add expense error:', error.message);
-            return res.staus(500).json({ error: error.message });
+            console.error('Add expense error:', e.message);
+            return res.status(500).json({ error: e.message });
         }
     }
 

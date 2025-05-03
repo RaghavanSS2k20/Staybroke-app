@@ -27,7 +27,7 @@ function getDayAndMonth(dateString) {
 export default function ExpenseComponent(expenseData){
     const { setHeading } = useNavBar();
     const [open, setOpen] = useState(false)
-    const [isGuilty, setIsGuilty] = useState(expenseData.expense.guilt || expenseData.expense.type!=="normal")
+    const [isGuilty, setIsGuilty] = useState(expenseData.expense.guilty)
     const onOpen = () =>{
       setOpen(!open)
     }
@@ -73,16 +73,17 @@ export default function ExpenseComponent(expenseData){
               <div className={styles.details}>
                 <div className={styles.titleRow}>
                   <div className={styles.title}>{expense.description}</div>
-                  <div className={styles.icon}>
+                
+                </div>
+                <div className={styles.subtitle}>{(expense.from_splitwise) &&(<>From Splitwise</>)}</div>
+              </div>
+              <div className={styles.icon}>
                     {/* optional icon */}
                     {(isGuilty) && (
                        <Image src={SadIcon} height={27} width={27} alt="Sad" />
                     )}
                     
                   </div>
-                </div>
-                <div className={styles.subtitle}>{(expense.from_splitwise) &&(<>From Splitwise</>)}</div>
-              </div>
             
               <div className={styles.amount}>
                 ₹{expense.amount}

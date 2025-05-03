@@ -2,9 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@chakra-ui/react";
 import styles from "./drawer.module.css";
 import { Input } from "@chakra-ui/react";
+import { Spinner } from "@chakra-ui/react";
+import { addExpense } from "@/services/ExpenseService";
 
 export const Sheet = ({ open, setOpen }) => {
   const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('')
+  const[loading, setLoading] = useState(false);
+  const[buttonText, setButtonText] = useState('Save')
   const contentRef = useRef(null);
   const inputRef = useRef(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -41,6 +46,37 @@ export const Sheet = ({ open, setOpen }) => {
     }
   };
 
+  const handleDescriptionInput=(e)=>{
+    const val = e.target.value
+    setDescription(val)
+  }
+
+  const handleSave = async () =>{
+      setLoading(true)
+      setButtonText("Loading....")
+      const resp = await addExpense({
+        description,
+        amount
+      })
+
+      if(resp.success){
+        if (navigator.vibrate) {
+          navigator.vibrate(50); // Vibrates for 200ms
+        }
+
+        setLoading(false)
+        setButtonText("Added!")
+        setOpen(false)
+        window.location.reload();
+        
+      }else{
+        setButtonText("Failed !")
+        setLoading(false)
+      }
+  }
+
+
+
   return (
     <Drawer.Root
       open={open}
@@ -71,9 +107,14 @@ export const Sheet = ({ open, setOpen }) => {
               />
             </div>
           </div>
-          <Input variant={'flushed'} borderBottomWidth={'2px'} fontWeight={'600'} fontSize={'1rem'} borderColor="#2D2F2F" placeholder="Description Here" width={"fit-content"} textAlign={'center'}/>
-          <div className={styles.button}>
-              Save
+          <Input value={description} onChange={handleDescriptionInput} variant={'flushed'} borderBottomWidth={'2px'} fontWeight={'600'} fontSize={'1rem'} borderColor="#2D2F2F" placeholder="Description Here" width={"fit-content"} textAlign={'center'}/>
+          <div className={styles.button} onClick={handleSave} >
+              {buttonText}
+              {
+                loading && (
+                  <Spinner size="xs" />
+                )
+              }
           </div>
         </div>
       </Drawer.Content>

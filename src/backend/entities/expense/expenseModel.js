@@ -11,6 +11,7 @@ const expenseSchema = mongoose.Schema({
     },
     date: {
         required: true,
+        default: Date.now,
         type: Date
     },
     guilty:{

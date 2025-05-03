@@ -42,3 +42,28 @@ export async function updateGuilt(id){
         }
     }
 }
+
+export async function addExpense(expense) {
+    const res = await fetch(`${BACKEND_URI}/expense/`,{
+        method:'POST',
+        headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            expense
+          //   value: true, // or false depending on your input
+          }),
+    })
+    const data = await res.json()
+    if(res.ok){
+        return {
+            success:true,
+            data:data.data
+        }
+    }else{
+        return {
+            success:false,
+            error:data.error
+        }
+    }
+}
