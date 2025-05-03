@@ -27,12 +27,15 @@ function getDayAndMonth(dateString) {
 export default function ExpenseComponent(expenseData){
     const { setHeading } = useNavBar();
     const [open, setOpen] = useState(false)
+    const [isGuilty, setIsGuilty] = useState(expenseData.expense.guilt || expenseData.expense.type!=="normal")
     const onOpen = () =>{
       setOpen(!open)
     }
 
     console.log("SHIT : ",expenseData.expense)
     const expense = expenseData.expense
+
+
 
     useEffect(() => {
       setHeading("Expenses");
@@ -41,15 +44,27 @@ export default function ExpenseComponent(expenseData){
     const date = getDayAndMonth(expense?.date)
 
     const handleDoubleClick = async () => {
+      setIsGuilty(!isGuilty)
+      if (navigator.vibrate) {
+        navigator.vibrate(10); // Vibrates for 200ms
+      }
       // Call the updateGuilt function when double-clicked or double-tapped
-      await updateGuilt(expense.id); // Assuming `expense.id` is passed for updating
+      const res =  await updateGuilt(expense._id); // Assuming `expense.id` is passed for updating
+      if(res.success){
+        console.log(res.data)
+      }else{
+
+      }
     };
 
 
     return(
       <>
        
-            <div className={styles.expenseCard}>
+            <div className={styles.expenseCard}
+              onDoubleClick={handleDoubleClick} // Handle double-click for desktop
+              // onTouchEnd={handleDoubleClick} // Handle double-touch for mobile
+            >
               <div className={styles.date}>
                 <div>{date?.day}</div>
                 <div>{date?.month}</div>
@@ -60,7 +75,7 @@ export default function ExpenseComponent(expenseData){
                   <div className={styles.title}>{expense.description}</div>
                   <div className={styles.icon}>
                     {/* optional icon */}
-                    {(expense.type === 'bad' || expense.guilty === true) && (
+                    {(isGuilty) && (
                        <Image src={SadIcon} height={27} width={27} alt="Sad" />
                     )}
                     

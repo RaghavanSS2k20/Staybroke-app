@@ -3,7 +3,7 @@ import styles from "../styles/Home.module.css";
 import { useState, useEffect, useRef } from "react";
 import { Sheet } from "@/components/drawer/drawerComponent";
 import { AddSVGComponent } from "@/assets/SVGComponents";
-import getAllExpenses from "@/services/ExpenseService";
+import {getAllExpenses} from "@/services/ExpenseService";
 
 function formatMonthYear(dateString) {
   const parts = dateString.split('-');  // Split "2025-April" into ["2025", "April"]
