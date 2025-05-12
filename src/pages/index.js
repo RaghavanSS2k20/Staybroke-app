@@ -1,9 +1,11 @@
 import ExpenseComponent from "@/components/index/expense/ExpenseComponent";
 import styles from "../styles/Home.module.css";
 import { useState, useEffect, useRef } from "react";
-import { Sheet } from "@/components/drawer/drawerComponent";
+import { ExpenseSheet } from "@/components/drawer/drawerComponent";
 import { AddSVGComponent } from "@/assets/SVGComponents";
 import {getAllExpenses} from "@/services/ExpenseService";
+import { useSheet } from "@/contexts/SheetContext";
+import { Loader } from "@/components/fallbacks/Loader/LoadingComponent";
 
 function formatMonthYear(dateString) {
   const parts = dateString.split('-');  // Split "2025-April" into ["2025", "April"]
@@ -12,34 +14,46 @@ function formatMonthYear(dateString) {
 }
 
 
+
+
 export default function ExpenseList() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState([]);
+  const { openSheet } = useSheet();
+  const [sheetMode, setSheetMode] = useState("add"); // 'add' or 'edit'
+const [selectedExpense, setSelectedExpense] = useState(null);
   const bottomRef = useRef(null);
+
+  // const openSheet = (mode = "add", data = null) => {
+  //   setSheetMode(mode);
+  //   setSelectedExpense(data);
+  //   setOpen(true);
+  // };
 
   const onOpen = () => setOpen(true);
 
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      setLoading(true);
-      const res = await getAllExpenses();
-      if (res.success) {
-        setExpenses(res.data.data);  // assuming data structure: { data: [...] }
-      } else {
-        console.error("Error loading expenses:", res.error);
-      }
-      setLoading(false);
-    };
+  const fetchExpenses = async () => {
+    setLoading(true);
+    const res = await getAllExpenses();
+    if (res.success) {
+      setExpenses(res.data.data);  // assuming data structure: { data: [...] }
+    } else {
+      console.error("Error loading expenses:", res.error);
+    }
+    setLoading(false);
+  };
 
+
+  useEffect(() => {   
     fetchExpenses();
   }, []);
 
   return (
     <>
       <div className={styles.expensesPage}>
-        {loading ? (
-          <p>Loading expenses...</p>
+      {loading ? (
+          <Loader message={'Loading Expenses...'}/>
         ) : (
           <div className={styles.month}>
             {expenses.map((expenseGroup) => (
@@ -53,7 +67,12 @@ export default function ExpenseList() {
                 {/* Expenses List */}
                 <div className={styles.expensesList}>
                   {expenseGroup.expenses.map((expense) => (
-                    <ExpenseComponent key={expense._id} expense={expense} />
+                    <ExpenseComponent 
+                      key={expense._id} 
+                      expenseData={expense} 
+                      openSheet={openSheet}
+                      reload={fetchExpenses}
+                    />
                   ))}
                 </div>
               </div>
@@ -62,9 +81,8 @@ export default function ExpenseList() {
         )}
       </div>
 
-      <Sheet open={open} setOpen={setOpen} />
-
-      <div className={styles.fab} onClick={onOpen}>
+     
+      <div className={styles.fab} onClick={() => openSheet("add",null, fetchExpenses)}>
         <AddSVGComponent size={15} />
       </div>
     </>

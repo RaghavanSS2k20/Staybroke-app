@@ -75,6 +75,7 @@
   gap: 1rem;
   font-size: 1rem;
   width: 85%;
+  cursor: pointer;
   background-color: #2D2F2F;
 }
 

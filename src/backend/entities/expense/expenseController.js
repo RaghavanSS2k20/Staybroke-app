@@ -100,6 +100,36 @@ export async function getExpensesGroupedByMonth() {
     return await newExpense.save();
   }
 
+  export async function updateExpense({ id, description, amount }) {
+    try {
+      if (!id || !description || !amount) {
+        return { success: false, error: "All fields (id, description, amount) are required." };
+      }
+  
+      const existing = await Expense.findById(id);
+  
+      if (!existing) {
+        return { success: false, error: "Expense not found." };
+      }
+  
+      if (existing.from_splitwise) {
+        return { success: false, error: "Updates to Splitwise expenses are not allowed." };
+      }
+  
+      const updated = await Expense.findByIdAndUpdate(
+        id,
+        { description, amount },
+        { new: true }
+      );
+  
+      return { success: true, data: updated };
+    } catch (err) {
+      console.error("Error updating expense:", err);
+      return { success: false, error: err.message };
+    }
+  }
+  
+
   export async function importFromSplitwise(){
       if(!splitwise_user_id){
         return { success: false, error: "No current user"};
@@ -122,8 +152,13 @@ export async function getExpensesGroupedByMonth() {
         
           const expensesToInsert = [];
           const expensesToUpdate = [];
+          const expensesToDelete = [];
         
           for (const expense of expenses) {
+            if (expense.deleted_by !== null) {
+              expensesToDelete.push(expense.id.toString());
+              continue;
+            }
             const currentUser = expense.users.find(u => u.user_id.toString() === splitwise_user_id);
             if (!currentUser || currentUser.owed_share === "0.0") continue;
         
@@ -143,7 +178,9 @@ export async function getExpensesGroupedByMonth() {
               if (!existingIdsSet.has(expense.id.toString())) {
                 expensesToInsert.push({ _id: new mongoose.Types.ObjectId(), ...expenseObj });
               }
-            } else {
+            } 
+          
+            else {
               // Updated expense, push to update list
               expensesToUpdate.push(expenseObj);
             }
@@ -155,6 +192,12 @@ export async function getExpensesGroupedByMonth() {
               console.log("Inserting")
               await Expense.insertMany(expensesToInsert);
             }
+            if (expensesToDelete.length > 0) {
+              console.log("Deleting expenses:", expensesToDelete);
+              await Expense.deleteMany({ splitwise_id: { $in: expensesToDelete } });
+            }
+
+
         
             // Update existing expenses
             console.log("UPDATE ARRAY HERE : ", expensesToUpdate)
@@ -180,21 +223,19 @@ export async function getExpensesGroupedByMonth() {
         }
       }
   }
-
   export async function GetLastupdatedTimestamp() {
     try {
-      const latestExpense = await Expense.findOne()
-        .sort({ created_ts: -1 }) // Sort by newest first
-        .select('created_ts')     // Only return the created_at field
-                         // Return plain JS object (optional)
+      const latestExpense = await Expense.findOne({ splitwise_id: { $ne: null } }) // ✅ Filter for Splitwise-imported
+        .sort({ created_ts: -1 })        // Sort by newest first
+        .select('created_ts');           // Only return the created_ts field
   
-      return latestExpense["created_ts"] || null;
+      return latestExpense?.created_ts || null;
     } catch (err) {
       console.error('Error fetching latest timestamp:', err);
       return null;
     }
   }
-
+  
   export async function updateGuilt(expenseId) {
     if (!mongoose.Types.ObjectId.isValid(expenseId)) {
       throw new Error('Invalid expense ID');
@@ -211,4 +252,78 @@ export async function getExpensesGroupedByMonth() {
     await expense.save();
   
     return expense;
+  }
+
+  export async function deleteSpend(expenseId) {
+    try{
+      const expense = await Expense.findById(expenseId);
+      if(!expense){
+        return { success: false, error: "Expense not found" }
+      }
+      if(expense.from_splitwise){
+        return { success:false, error: "Cannot delete Splitwise expenses" }
+      }
+      await Expense.findByIdAndDelete(expenseId);
+      return { success: true }
+
+    }catch(e){
+      return { success: false, error: e.message }
+    }
+  }
+
+  export async function searchExpense(query){
+    const result = await Expense.aggregate([
+      // 1. Filter by description using regex (case-insensitive)
+      {
+        $match: {
+          description: { $regex: query, $options: "i" }
+        }
+      },
+  
+      // 2. Sort by date descending
+      { $sort: { date: -1 } },
+  
+      // 3. Add year and month name
+      {
+        $addFields: {
+          year: { $year: "$date" },
+          monthName: { $dateToString: { format: "%B", date: "$date" } }
+        }
+      },
+  
+      // 4. Group by year and month
+      {
+        $group: {
+          _id: { year: "$year", month: "$monthName" },
+          expenses: { $push: "$$ROOT" },
+          latestDate: { $first: "$date" }
+        }
+      },
+  
+      // 5. Sort groups by latest expense
+      { $sort: { latestDate: -1 } },
+  
+      // 6. Format month string and optionally sort expenses array inside group (MongoDB 5.2+)
+      {
+        $project: {
+          _id: 0,
+          month: {
+            $concat: [
+              { $toString: "$_id.year" },
+              "-",
+              "$_id.month"
+            ]
+          },
+          expenses: {
+            $sortArray: {
+              input: "$expenses",
+              sortBy: { date: -1 }
+            }
+          }
+        }
+      }
+    ]);
+  
+    return result;
+  
   }

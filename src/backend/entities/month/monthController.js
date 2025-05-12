@@ -1,6 +1,7 @@
+'use server'
 import { Month } from "./monthModel";
 import mongoose from "mongoose";
-import Expense from "../expense/expenseModel";
+import {Expense} from "../expense/expenseModel";
 
 export function getCurrentMonthSlug() {
     const now = new Date();

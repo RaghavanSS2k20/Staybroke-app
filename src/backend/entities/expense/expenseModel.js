@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { connectDB } from "@/backend/utils/connect";
 const expenseSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     description:{
@@ -34,5 +35,5 @@ const expenseSchema = mongoose.Schema({
 
 })
 
-const Expense = mongoose.models.Expense || mongoose.model("Expense", expenseSchema)
+const Expense = mongoose.models?.Expense || mongoose.model("Expense", expenseSchema)
 export default Expense

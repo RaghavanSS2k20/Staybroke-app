@@ -3,9 +3,10 @@ import { Drawer } from "@chakra-ui/react";
 import styles from "./drawer.module.css";
 import { Input } from "@chakra-ui/react";
 import { Spinner } from "@chakra-ui/react";
-import { addExpense } from "@/services/ExpenseService";
+import { addExpense, updateExpense } from "@/services/ExpenseService";
 
-export const Sheet = ({ open, setOpen }) => {
+
+export const ExpenseSheet = ({ open, setOpen,mode, expenseData, reload }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('')
   const[loading, setLoading] = useState(false);
@@ -15,6 +16,24 @@ export const Sheet = ({ open, setOpen }) => {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const initialHeightRef = useRef(0);
   if (typeof window === 'undefined') return;
+
+  useEffect(() => {
+    console.log(mode)
+    setButtonText("Save")
+    if (mode === "edit" && expenseData) {
+      // pre-fill form with expenseData
+      setAmount(expenseData.amount)
+      setDescription(expenseData.description)
+      
+      console.log("Datahere  : ",expenseData)
+      // cons
+    } else {
+      // reset form for "add"
+      setAmount("")
+      setDescription("")
+      
+    }
+  }, [mode, expenseData]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -31,6 +50,8 @@ export const Sheet = ({ open, setOpen }) => {
         setKeyboardOpen(false);
       }
     };
+
+   
   
     window.visualViewport.addEventListener('resize', handleViewportResize);
   
@@ -54,24 +75,49 @@ export const Sheet = ({ open, setOpen }) => {
   const handleSave = async () =>{
       setLoading(true)
       setButtonText("Loading....")
-      const resp = await addExpense({
-        description,
-        amount
-      })
+      if(mode === 'edit'){
+        const id = expenseData._id
+        const resp = await updateExpense({
+          id,
+          description,
+          amount
+        })
+        if(resp.success){
+          if (navigator.vibrate) {
+            navigator.vibrate(50); // Vibrates for 200ms
+          }
 
-      if(resp.success){
-        if (navigator.vibrate) {
-          navigator.vibrate(50); // Vibrates for 200ms
+          setLoading(false)
+          setButtonText("Saved!")
+          setOpen(false)
+          reload()
+        }else{
+          setButtonText("Failed !")
+          setLoading(false)
         }
-
-        setLoading(false)
-        setButtonText("Added!")
-        setOpen(false)
-        window.location.reload();
-        
       }else{
-        setButtonText("Failed !")
-        setLoading(false)
+        const resp = await addExpense({
+          description,
+          amount
+        })
+
+        if(resp.success){
+          
+
+          setLoading(false)
+          setButtonText("Added!")
+          setOpen(false)
+          if (navigator.vibrate) {
+            
+            navigator.vibrate(50); // Vibrates for 200ms
+            reload()
+          }
+          
+          
+        }else{
+          setButtonText("Failed !")
+          setLoading(false)
+        }
       }
   }
 
@@ -93,13 +139,13 @@ export const Sheet = ({ open, setOpen }) => {
             keyboardOpen ? styles.keyboardOpen : ''
           }`}
         >
-          <div className={styles["drawerHeader"]}>Add Expense</div>
+          <div className={styles["drawerHeader"]}>{mode === "edit" ? "Edit Expense" : "Add Expense"}</div>
           <div className={styles["inputContainer"]}>
             <div className={styles["amountInput"]}>
               <span className={styles.currency}>₹</span>
               <input
                 ref={inputRef}
-                type="text"
+                type="number"
                 className={styles.input}
                 value={amount}
                 onChange={handleInputChange}

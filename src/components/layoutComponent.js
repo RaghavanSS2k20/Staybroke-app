@@ -4,6 +4,8 @@ import pullToRefresh from '../utils/usePullToRefresh';
 // import { ReactNode } from 'react';
 import styles from "./layout.module.css"
 import { BottomTabBar } from './BottomTab/BottomTabBar';
+// import SheetProvider from '@/components/sheet/SheetProvider';
+import GlobalSheetRenderer from './globalSheetRenderer';
 import NavbarComponent from './navbar/navbarComponent';
 import { AddSVGComponent } from '@/assets/SVGComponents';
 export default function Layout({children}) {
@@ -19,12 +21,14 @@ export default function Layout({children}) {
 
     return (
         <div className={styles.root} >
+         
           <NavbarComponent />
           <main>
             {children}
           </main>
-          
+          <GlobalSheetRenderer />
           <BottomTabBar/>
+
         </div>
       );
 
