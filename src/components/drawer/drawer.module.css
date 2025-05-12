@@ -18,7 +18,7 @@
   padding: 1rem;
 }
 .keyboardOpen {
-  height: 90% !important;
+  /* height: 90% !important; */
 }
 .drawerHeader{
   font-size: 1rem;
@@ -47,6 +47,7 @@
   background: transparent;
   outline: none;
   color: #2D2F2F;
+  /* color:rebeccapurple; */
   width: 100px;
   text-align: left;
 }
