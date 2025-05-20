@@ -88,11 +88,20 @@ export default function Navbar (){
   const [isDateClicked, setIsDateClicked] = useState(false);
   const [isSadClicked, setIsSadClicked] = useState(false);
 
-  const { heading, setHeading, isExpandable, setIsExpandable } = useNavBar();
+  const { heading, setHeading, isExpandable, setIsExpandable,emit } = useNavBar();
   const handleClick = (index) => {
     console.log("HIIO")
     setClickedIndex(index);
   };
+
+  const handleGuiltClick = () => {
+    setIsSadClicked(!isSadClicked)
+    handleInteraction("guilt", !isSadClicked)
+  }
+
+ const handleSearchChange = (e) => {
+  emit({ query: e.target.value });
+};
 
   return(
     <Collapsible.Root  style={{ boxShadow : '0px 1px 4.9px rgba(0, 0, 0, 0.25)' }}>
@@ -115,6 +124,7 @@ export default function Navbar (){
                   type="text"
                   placeholder="Search By Name"
                   className={styles.searchInput}
+                   onChange={(e) => handleSearchChange(e)}  
                 />
                 <div className={styles.searchIcon}>
                   <SearchSVGComponent size={20} />

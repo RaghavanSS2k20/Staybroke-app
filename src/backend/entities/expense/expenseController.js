@@ -30,54 +30,86 @@ export async function getExpensesGroupedByMonthOpt() {
 
   return grouped;
 }
-export async function getExpensesGroupedByMonth() {
-  const result = await Expense.aggregate([
-    // 1. Sort all expenses by date descending
-    { $sort: { date: -1 } },
+export async function getExpensesGroupedByMonth(query = null, guilt = null) {
+  const pipeline = [];
 
-    // 2. Add year and month name
-    {
-      $addFields: {
-        year: { $year: "$date" },
-        monthName: { $dateToString: { format: "%B", date: "$date" } },
+  // 0. Build dynamic $match stage
+  const matchStage = {};
+
+  if (query) {
+    for (const [key, value] of Object.entries(query)) {
+      // Convert description value to case-insensitive regex if it's a string
+      if (key === "description" && typeof value === "string") {
+        matchStage[key] = { $regex: value, $options: "i" }; // case-insensitive search
+      } else {
+        matchStage[key] = value;
       }
-    },
+    }
+  }
 
-    // 3. Group by year and month
-    {
-      $group: {
-        _id: { year: "$year", month: "$monthName" },
-        expenses: { $push: "$$ROOT" },
-        latestDate: { $first: "$date" } // to sort groups
-      }
-    },
+  // Add guilty filter if requested
+  if (guilt && guilt === true) {
+    matchStage.guilty = true;
+  }
 
-    // 4. Sort the groups by latest expense date
-    { $sort: { latestDate: -1 } },
+  // Push match stage if it has filters
+  if (Object.keys(matchStage).length > 0) {
+    pipeline.push({ $match: matchStage });
+  }
 
-    // 5. Sort expenses array inside each group (MongoDB 5.2+)
-    {
-      $project: {
-        _id: 0,
-        month: {
-          $concat: [
-            { $toString: "$_id.year" },
-            "-",
-            "$_id.month"
-          ]
-        },
-        expenses: {
-          $sortArray: {
-            input: "$expenses",
-            sortBy: { date: -1 }
-          }
+  // 1. Sort expenses by date descending
+  pipeline.push({ $sort: { date: -1 } });
+
+  // 2. Add year, month name, and convert amount to number
+  pipeline.push({
+    $addFields: {
+      year: { $year: "$date" },
+      monthName: { $dateToString: { format: "%B", date: "$date" } },
+      numericAmount: { $toDouble: "$amount" }
+    }
+  });
+
+  // 3. Group by year and month
+  pipeline.push({
+    $group: {
+      _id: {
+        year: "$year",
+        month: "$monthName"
+      },
+      expenses: { $push: "$$ROOT" },
+      totalSpend: { $sum: "$numericAmount" },
+      latestDate: { $first: "$date" }
+    }
+  });
+
+  // 4. Sort groups by latest expense date
+  pipeline.push({ $sort: { latestDate: -1 } });
+
+  // 5. Final formatting
+  pipeline.push({
+    $project: {
+      _id: 0,
+      month: {
+        $concat: [
+          { $toString: "$_id.year" },
+          "-",
+          "$_id.month"
+        ]
+      },
+      totalSpend: 1,
+      expenses: {
+        $sortArray: {
+          input: "$expenses",
+          sortBy: { date: -1 }
         }
       }
     }
-  ]);
+  });
 
+  const result = await Expense.aggregate(pipeline);
   return result;
 }
+
 
 
 

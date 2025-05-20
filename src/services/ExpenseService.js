@@ -1,20 +1,33 @@
 const BACKEND_URI = process.env.NEXT_PUBLIC_API_URI;
-export  async function getAllExpenses(){
-    console.log("URI HERE : ",`${BACKEND_URI}/expense`)
-    const response = await fetch(`${BACKEND_URI}/expense`)
-    // console.log(response)
-    if (!response.ok) {
-        return {success:false, error:response.error}
-      }
-    
-    const data = await response.json();
-    
-    return {
-        success:true,
-        data:data
+export async function getAllExpenses(query = '', guilt = null) {
+    const params = new URLSearchParams();
+
+    if (query && query.trim() !== '') {
+        params.append('query', query);
     }
 
+    if (guilt === true) {
+        params.append('guilt', 'true');
+    }
+
+    const url = `${BACKEND_URI}/expense${params.toString() ? `?${params.toString()}` : ''}`;
+
+    console.log("URI HERE:", url);
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        return { success: false, error: response.statusText }; // statusText is safer than response.error
+    }
+
+    const data = await response.json();
+
+    return {
+        success: true,
+        data: data
+    };
 }
+
 
 export async function updateGuilt(id){
     const res = await fetch(`${BACKEND_URI}/expense/${id}`,{

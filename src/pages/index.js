@@ -6,6 +6,7 @@ import { AddSVGComponent } from "@/assets/SVGComponents";
 import {getAllExpenses} from "@/services/ExpenseService";
 import { useSheet } from "@/contexts/SheetContext";
 import { Loader } from "@/components/fallbacks/Loader/LoadingComponent";
+import { useNavBar } from "@/contexts/NavBarContext";
 
 function formatMonthYear(dateString) {
   const parts = dateString.split('-');  // Split "2025-April" into ["2025", "April"]
@@ -20,6 +21,7 @@ export default function ExpenseList() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState([]);
+  const {filters} = useNavBar();
   const { openSheet } = useSheet();
   const [sheetMode, setSheetMode] = useState("add"); // 'add' or 'edit'
 const [selectedExpense, setSelectedExpense] = useState(null);
@@ -33,11 +35,11 @@ const [selectedExpense, setSelectedExpense] = useState(null);
 
   const onOpen = () => setOpen(true);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = async (query = "", guilt = null) => {
     setLoading(true);
-    const res = await getAllExpenses();
+    const res = await getAllExpenses(query, guilt);
     if (res.success) {
-      setExpenses(res.data.data);  // assuming data structure: { data: [...] }
+      setExpenses(res.data.data);
     } else {
       console.error("Error loading expenses:", res.error);
     }
@@ -45,9 +47,9 @@ const [selectedExpense, setSelectedExpense] = useState(null);
   };
 
 
-  useEffect(() => {   
-    fetchExpenses();
-  }, []);
+ useEffect(() => {
+    fetchExpenses(filters.query || "", filters.guilt ?? null);
+  }, [filters]);
 
   return (
     <>
@@ -61,7 +63,7 @@ const [selectedExpense, setSelectedExpense] = useState(null);
                 {/* Month Heading */}
                 <div className={styles.monthHeading}>
                   <p>{formatMonthYear(expenseGroup.month)}</p>
-                  <p></p>
+                  <p>₹{expenseGroup.totalSpend}</p>
                 </div>
 
                 {/* Expenses List */}
