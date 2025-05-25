@@ -1,13 +1,10 @@
-// components/PushInitializer.jsx
 'use client';
 
 import { useEffect } from 'react';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = atob(base64);
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
@@ -19,18 +16,21 @@ export default function PushInitializer() {
         try {
           const registration = await navigator.serviceWorker.register('/sw.js');
           console.log('Service worker registered:', registration);
-          console.warn('VAPID PUBLIC KEY:', process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);  
-          const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-          });
 
-          const res = await fetch(`${BACKEND_URI}/subscribe`, {
+          const readyRegistration = await navigator.serviceWorker.ready;
+          console.log('Service worker ready:', readyRegistration);
+
+          const subscription = await readyRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY),
+          });
+          console.log('Push subscription:', subscription);
+
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/notification/subscribe`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(subscription),
           });
-
           const data = await res.json();
           console.log('Push subscription successful:', data);
         } catch (err) {
@@ -42,5 +42,5 @@ export default function PushInitializer() {
     }
   }, []);
 
-  return null; // No UI needed
+  return null;
 }

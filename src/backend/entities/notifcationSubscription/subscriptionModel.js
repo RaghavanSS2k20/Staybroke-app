@@ -12,4 +12,5 @@ const subscriptionSchema = new mongoose.Schema({
   expirationTime: Number,
 }, { timestamps: true });
 
-module.exports = mongoose.model('Subscription', subscriptionSchema);
+const Subscription = mongoose.models?.Subscription || mongoose.model('Subscription', subscriptionSchema);
+export default Subscription;

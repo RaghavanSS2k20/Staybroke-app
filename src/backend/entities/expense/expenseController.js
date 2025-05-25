@@ -191,6 +191,7 @@ export async function getExpensesGroupedByMonth(query = null, guilt = null) {
               expensesToDelete.push(expense.id.toString());
               continue;
             }
+            if(expense.payment) continue;
             const currentUser = expense.users.find(u => u.user_id.toString() === splitwise_user_id);
             if (!currentUser || currentUser.owed_share === "0.0") continue;
         
