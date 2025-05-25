@@ -7,6 +7,7 @@ import { BottomTabBar } from './BottomTab/BottomTabBar';
 // import SheetProvider from '@/components/sheet/SheetProvider';
 import GlobalSheetRenderer from './globalSheetRenderer';
 import NavbarComponent from './navbar/navbarComponent';
+import PushInitializer from '@/utils/pushInitializer';
 import { AddSVGComponent } from '@/assets/SVGComponents';
 export default function Layout({children}) {
   async function handleRefresh() {
@@ -21,7 +22,7 @@ export default function Layout({children}) {
 
     return (
         <div className={styles.root} >
-         
+         <PushInitializer />
           <NavbarComponent />
           <main>
             {children}
