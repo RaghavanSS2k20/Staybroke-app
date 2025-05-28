@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const {NEXT_PUBLIC_API_URI} = process.env;
 const subscriptionSchema = new mongoose.Schema({
   endpoint: { 
-    type: String, required: true, unique: true ,
+    type: String, required: true,
     default: `${NEXT_PUBLIC_API_URI}/expense`
 },
   keys: {

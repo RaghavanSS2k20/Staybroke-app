@@ -14,7 +14,7 @@ export default function PushInitializer() {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       const handlePush = async () => {
         try {
-          const registration = await navigator.serviceWorker.register('/sw.js');
+          const registration = await navigator.serviceWorker.register('/custom-sw.js');
           console.log('Service worker registered:', registration);
 
           const readyRegistration = await navigator.serviceWorker.ready;

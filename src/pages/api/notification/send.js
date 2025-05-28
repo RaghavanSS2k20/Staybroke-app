@@ -9,8 +9,8 @@ export default async function handler(req, res) {
   }
 
   const notificationPayload = {
-    title: "New Notification",
-    body: "This is a new notification",
+    title: "Imported Lunch Expense",
+    body: "The lunch expense has been imported from splitwise.",
     icon: "https://some-image-url.jpg",
     data: {
       url: "https://example.com",
@@ -25,16 +25,17 @@ export default async function handler(req, res) {
     }
 
     await Promise.all(
-      subscriptions.map((sub) =>
-        webpush.sendNotification(sub, JSON.stringify(notificationPayload)).catch(async (err) => {
-          console.error("Error sending to:", sub.endpoint, err);
+     subscriptions.map((sub) => {
+      console.log("notificationPayload", notificationPayload);
+      webpush.sendNotification(sub, JSON.stringify(notificationPayload)).catch(async (err) => {
+        console.error("Error sending to:", sub.endpoint, err);
 
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            await Subscription.deleteOne({ endpoint: sub.endpoint });
-            console.log(`Deleted stale subscription: ${sub.endpoint}`);
-          }
-        })
-      )
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await Subscription.deleteOne({ endpoint: sub.endpoint });
+          console.log(`Deleted stale subscription: ${sub.endpoint}`);
+        }
+      });
+    })
     );
 
     return res.status(200).json({ message: "Notifications sent successfully." });
